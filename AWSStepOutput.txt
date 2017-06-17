@@ -1,0 +1,66 @@
+DROP TABLE IF EXISTS tsvexport;
+
+CREATE EXTERNAL TABLE tsvexport (
+ 	id bigint,
+	created_at string,
+	created_at_date string,
+	created_at_year string,
+	created_at_month string,
+	created_at_day string,
+	created_at_time string,
+	retweet_count int,
+	name string,
+	followers_count int,
+	listed_count int,
+	friends_count int,
+	lang string,
+	user_location string,
+	time_zone string
+ )
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '${OUTPUT}tsvexport/';
+
+INSERT OVERWRITE TABLE tsvexport
+SELECT
+    	id,
+	created_at,
+	created_at_date,
+	created_at_year,
+	created_at_month,
+	created_at_day,
+	created_at_time,
+	retweet_count,
+	name,
+	followers_count,
+	listed_count,
+	friends_count,
+	lang,
+	user_location,
+	time_zone
+FROM
+twitter_final
+where id is not null;
+
+DROP TABLE IF EXISTS top20tsv;
+
+CREATE EXTERNAL TABLE top20tsv (
+	time_zone string,
+	cnt bigint
+	
+ )
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '${OUTPUT}top20/';
+
+INSERT OVERWRITE TABLE top20tsv
+SELECT
+	time_zone,
+	count(id) as cnt
+FROM
+twitter_final
+WHERE id is not null
+GROUP BY time_zone
+ORDER BY cnt desc limit 22;
